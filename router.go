@@ -87,7 +87,7 @@ func (s *Router) Handle(action mvc.Action) fasthttp.RequestHandler {
 				s := make([]byte, 4<<10)
 				l := runtime.Stack(s, false)
 
-				err := fmt.Errorf("recovered from %v with stack: %s info: %v", rec, s[0:l], info)
+				err := fmt.Errorf("recovered from %v with stack: %s path: %s", rec, s[0:l], ctx.Path())
 				raven.CaptureError(err, nil)
 				log.Println(err)
 			}
