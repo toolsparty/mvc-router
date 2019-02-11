@@ -9,6 +9,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/toolsparty/mvc"
 	"github.com/valyala/fasthttp"
+	"runtime"
+	"github.com/getsentry/raven-go"
+	"fmt"
 )
 
 type HandleFunc func(path string, handle fasthttp.RequestHandler)
@@ -79,6 +82,17 @@ func (s *Router) Route(app *mvc.App) error {
 // Handle request by mvc.Action and apply middleware
 func (s *Router) Handle(action mvc.Action) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				s := make([]byte, 4<<10)
+				l := runtime.Stack(s, false)
+
+				err := fmt.Errorf("recovered from %v with stack: %s info: %v", rec, s[0:l], info)
+				raven.CaptureError(err, nil)
+				log.Println(err)
+			}
+		}()
+
 		var err error
 		var fh mvc.Action
 
